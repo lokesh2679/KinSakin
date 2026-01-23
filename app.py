@@ -6,7 +6,7 @@ import time
 
 # --- CONFIGURATION ---
 API_URL = "http://127.0.0.1:8011"
-st.set_page_config(page_title="Kintsugi | Data Cleaning AI", layout="wide", page_icon="✨")
+st.set_page_config(page_title="Kintsugi | Data Cleaning AI", layout="wide")
 
 # --- STYLING (The "Empire" Look) ---
 st.markdown("""
@@ -35,7 +35,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title("✨ KINTSUGI")
+st.title(" KINTSUGI")
 st.markdown("<h3 style='text-align: center; color: #888;'>The Art of Golden Data Repair</h3>", unsafe_allow_html=True)
 st.divider()
 
@@ -61,7 +61,7 @@ with st.sidebar:
     # This is your Strategy implemented: Recommended Tag
     model_choice = st.selectbox(
         "Choose AI Engine:",
-        ["Gemini 1.5 Flash (Recommended)", "GPT-4o mini (Coming Soon)", "Claude 3 Haiku (Coming Soon)"]
+        ["Gemini 2.5 Flash (Recommended)", "GPT-4o mini (Coming Soon)", "Claude 3 Haiku (Coming Soon)"]
     )
     
     if "Recommended" in model_choice:
@@ -126,7 +126,7 @@ if uploaded_file:
                             st.json({
                                 "Columns Detected": result.get('detected_columns', list(clean_df.columns)),
                                 "Status": "Optimized",
-                                "AI Model": "Gemini 1.5 Flash"
+                                "AI Model": "Gemini 2.5 Flash"
                             })
                             
                         # 4. DOWNLOAD
