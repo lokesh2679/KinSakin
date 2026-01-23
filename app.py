@@ -9,6 +9,41 @@ API_URL = "http://127.0.0.1:8011"
 st.set_page_config(page_title="KinSakin | Data Cleaning AI", layout="wide", page_icon="✨")
 
 # --- STYLING (The "Empire" Look) ---
+# FORCE DARK LUXURY THEME
+st.set_page_config(
+    page_title="KinSakin Refinery",
+    page_icon="👑",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Custom CSS for "Gold Dust" Vibe
+st.markdown("""
+    <style>
+    /* Main Background to Void Black */
+    .stApp {
+        background-color: #0e1117;
+        color: #FAFAFA;
+    }
+    /* Headers to Gold */
+    h1, h2, h3 {
+        color: #D4AF37 !important;
+        font-family: 'Helvetica Neue', sans-serif;
+    }
+    /* Metrics to Gold */
+    div[data-testid="stMetricValue"] {
+        color: #D4AF37;
+    }
+    /* Button Styling */
+    .stButton>button {
+        background-color: #D4AF37;
+        color: black;
+        border-radius: 5px;
+        border: none;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 st.markdown("""
     <style>
     .main {
