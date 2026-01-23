@@ -1,136 +1,150 @@
 import streamlit as st
 import pandas as pd
+import requests
 import io
+import time
 
-# --- 1. CONFIGURATION (ROYAL THEME) ---
-st.set_page_config(page_title="KinSakin Refinery", page_icon="💎", layout="centered")
+# --- CONFIGURATION ---
+API_URL = "http://127.0.0.1:8011"
+st.set_page_config(page_title="Kintsugi | Data Cleaning AI", layout="wide", page_icon="✨")
 
-# --- 2. CUSTOM CSS (Dark & Classy) ---
+# --- STYLING (The "Empire" Look) ---
 st.markdown("""
     <style>
-    /* Main Background */
-    .stApp { background-color: #0e1117; color: #E0E0E0; }
-    
-    /* Headers - Champagne Gold */
-    h1, h2, h3 { color: #C5A059 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 300; }
-    
-    /* Metrics */
-    [data-testid="stMetricLabel"] { color: #C5A059 !important; }
-    [data-testid="stMetricValue"] { color: #FFFFFF !important; }
-    
-    /* PRIMARY ACTION BUTTON (The "Refine" Button) */
+    .main {
+        background-color: #0e1117;
+    }
+    h1 {
+        color: #d4af37; /* Kintsugi Gold */
+        text-align: center;
+    }
     .stButton>button {
-        background-color: #C5A059;
-        color: #000000;
-        font-weight: bold;
-        border: none;
+        background-color: #d4af37;
+        color: black;
         width: 100%;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+    .success-box {
         padding: 15px;
-        font-size: 18px;
-        transition: all 0.3s;
+        background-color: #1c2e24;
+        border-left: 5px solid #28a745;
+        border-radius: 5px;
     }
-    .stButton>button:hover {
-        background-color: #FFFFFF;
-        box-shadow: 0px 0px 15px #C5A059;
-    }
-
-    /* Uploader Visibility */
-    [data-testid="stFileUploader"] { border: 1px dashed #444; background-color: #161b22; }
-    [data-testid="stFileUploader"] div, [data-testid="stFileUploader"] span { color: #E0E0E0 !important; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. HEADER ---
-st.title("KINSAKIN")
-st.markdown("<p style='color: #888; margin-top: -20px; font-style: italic;'>The Sovereign Data Refinery</p>", unsafe_allow_html=True)
-st.markdown("---")
+# --- HEADER ---
+st.title("✨ KINTSUGI")
+st.markdown("<h3 style='text-align: center; color: #888;'>The Art of Golden Data Repair</h3>", unsafe_allow_html=True)
+st.divider()
 
-# --- 4. INPUT SECTION ---
-uploaded_file = st.file_uploader("Drop raw data (CSV/Excel)", type=['csv', 'xlsx'])
+# --- SIDEBAR (Status & Stats) ---
+with st.sidebar:
+    st.header("System Status")
+    try:
+        # Quick ping to see if server is up
+        response = requests.get(f"{API_URL}/docs", timeout=2)
+        if response.status_code == 200:
+            st.success("🟢 Engine Online (Port 8011)")
+            engine_status = True
+        else:
+            st.error("🔴 Engine Offline")
+            engine_status = False
+    except:
+        st.error("🔴 Engine Offline")
+        st.warning("Run: `python server.py`")
+        engine_status = False
 
-# --- 5. THE ENGINE ---
-if uploaded_file is not None:
-    # A. LOAD DATA
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
+    st.divider()
+    st.markdown("### 🧠 Model Selector")
+    # This is your Strategy implemented: Recommended Tag
+    model_choice = st.selectbox(
+        "Choose AI Engine:",
+        ["Gemini 1.5 Flash (Recommended)", "GPT-4o mini (Coming Soon)", "Claude 3 Haiku (Coming Soon)"]
+    )
+    
+    if "Recommended" in model_choice:
+        st.info("⚡ Fastest & Most Reliable for general cleaning.")
     else:
-        df = pd.read_excel(uploaded_file)
+        st.warning("🔒 This model is locked in the Prototype version.")
 
-    # B. AI DIAGNOSTICS (The "Recommendations")
-    st.header("1. AI Diagnostics")
-    
-    # Calculate Dirt
-    missing_count = df.isnull().sum().sum()
-    duplicate_count = df.duplicated().sum()
-    
-    # Show the "Before" Stats
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Total Rows", df.shape[0])
-    c2.metric("Missing Values", missing_count, delta_color="inverse")
-    c3.metric("Duplicates", duplicate_count, delta_color="inverse")
+    st.divider()
+    st.markdown("---")
+    st.caption("v0.9.0 Prototype | Powered by Kintsugi Engine")
 
-    # The AI "Voice" Advice
-    if missing_count > 0 or duplicate_count > 0:
-        st.warning(f"⚠️ **AI Recommendation:** Detected {missing_count} missing cells and {duplicate_count} duplicates. Recommended Action: Run Auto-Refine.")
-    else:
-        st.success("✅ **AI Recommendation:** Data appears clean. Ready for export.")
+# --- MAIN LOGIC ---
+if not engine_status:
+    st.warning("⚠️ The Kintsugi Backend is not running. Please start the server terminal.")
+    st.stop()
 
-    # C. THE CLEANING STATION (The Missing Buttons)
-    st.header("2. Refinery Controls")
-    
-    col_a, col_b = st.columns(2)
-    
-    with col_a:
-        # OPTION 1: REMOVE DUPLICATES
-        if st.checkbox("Remove Duplicates"):
-            df = df.drop_duplicates()
-            st.caption("Duplicates marked for removal.")
+uploaded_file = st.file_uploader("Drop your messy file here (CSV)", type=["csv"])
+
+if uploaded_file:
+    # 1. SHOW RAW DATA
+    st.subheader("1. Raw Inspection")
+    try:
+        raw_df = pd.read_csv(uploaded_file)
+        st.dataframe(raw_df.head(5), use_container_width=True)
+        st.caption(f"Detected {raw_df.shape[0]} rows and {raw_df.shape[1]} columns.")
+    except:
+        st.error("Could not preview raw file. It's really messy!")
+
+    # 2. THE REPAIR BUTTON
+    st.markdown("---")
+    if st.button("✨ REPAIR DATA (KINTSUGI PROCESS)"):
+        with st.spinner("Analyzing structure... Detecting entities... Applying Gold Lacquer..."):
             
-    with col_b:
-        # OPTION 2: FILL MISSING DATA
-        fill_strategy = st.selectbox("Handle Missing Data:", ["Do Nothing", "Fill with Zero", "Fill with Average", "Drop Rows"])
-
-    # --- THE BIG BUTTON (ACTION) ---
-    st.markdown("###") # Spacer
-    if st.button("🚀 LAUNCH REFINERY (Clean Data)"):
-        
-        # Apply Cleaning Logic
-        if fill_strategy == "Fill with Zero":
-            df = df.fillna(0)
-        elif fill_strategy == "Fill with Average":
-            # Only fill numeric columns with average
-            numeric_cols = df.select_dtypes(include=['number']).columns
-            df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-            # Fill text columns with "Unknown"
-            df = df.fillna("Unknown")
-        elif fill_strategy == "Drop Rows":
-            df = df.dropna()
-
-        # SUCCESS STATE
-        st.success("✨ Refinement Complete! Dust removed.")
-        
-        # D. VISUALS (The "After" View)
-        st.header("3. Refined Intelligence")
-        st.dataframe(df.head(10), use_container_width=True)
-        
-        # Quick Graph
-        numeric_cols = df.select_dtypes(include=['number']).columns
-        if len(numeric_cols) > 0:
-            st.bar_chart(df[numeric_cols[0]], color="#C5A059")
-
-        # E. EXPORT (The Gold Bar)
-        st.header("4. Export Gold")
-        
-        # Convert to CSV for download
-        csv_buffer = df.to_csv(index=False).encode('utf-8')
-        
-        st.download_button(
-            label="📥 Download Clean Data (CSV)",
-            data=csv_buffer,
-            file_name="kinsakin_refined_gold.csv",
-            mime="text/csv"
-        )
-
-else:
-    # Empty State
-    st.info("Waiting for raw material... Upload a file to activate the AI.")
+            uploaded_file.seek(0)
+            
+            try:
+                # SEND TO BACKEND
+                files = {"file": (uploaded_file.name, uploaded_file, "text/csv")}
+                response = requests.post(f"{API_URL}/upload", files=files, timeout=120)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    if result['status'] == 'success':
+                        st.balloons()
+                        
+                        clean_data = result['preview']
+                        clean_df = pd.DataFrame(clean_data)
+                        
+                        # 3. DISPLAY RESULTS
+                        st.subheader("2. Golden Result")
+                        st.markdown(f'<div class="success-box">✅ Successfully repaired <b>{result["rows"]}</b> rows.</div>', unsafe_allow_html=True)
+                        st.markdown("") 
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown("**Cleaned Data Preview:**")
+                            st.dataframe(clean_df, use_container_width=True)
+                        
+                        with col2:
+                            st.markdown("**Data Health:**")
+                            st.json({
+                                "Columns Detected": result.get('detected_columns', list(clean_df.columns)),
+                                "Status": "Optimized",
+                                "AI Model": "Gemini 1.5 Flash"
+                            })
+                            
+                        # 4. DOWNLOAD
+                        csv = clean_df.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            label="📥 Download Polished CSV",
+                            data=csv,
+                            file_name=f"kintsugi_fixed_{uploaded_file.name}",
+                            mime="text/csv",
+                        )
+                        
+                    else:
+                        st.error(f"Repair Failed: {result.get('reason')}")
+                
+                elif response.status_code == 429:
+                    st.warning("⚠️ Rate Limit Hit. The server is cooling down. Please wait 30s and try again.")
+                else:
+                    st.error(f"Server Error ({response.status_code})")
+                    
+            except Exception as e:
+                st.error(f"Connection Error: {e}")
