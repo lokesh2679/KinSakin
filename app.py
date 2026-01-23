@@ -6,7 +6,7 @@ import time
 
 # --- CONFIGURATION ---
 API_URL = "http://127.0.0.1:8011"
-st.set_page_config(page_title="Kinsakin | Data Cleaning AI", layout="wide")
+st.set_page_config(page_title="KinSakin | Data Cleaning AI", layout="wide")
 
 # --- STYLING (The "Empire" Look) ---
 st.markdown("""
@@ -15,7 +15,7 @@ st.markdown("""
         background-color: #0e1117;
     }
     h1 {
-        color: #d4af37; /* Kinsakin Gold */
+        color: #d4af37; /* KinSakin Gold */
         text-align: center;
     }
     .stButton>button {
@@ -35,7 +35,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # --- HEADER ---
-st.title(" Kinsakin")
+st.title(" KinSakin")
 st.markdown("<h3 style='text-align: center; color: #888;'>The Art of Golden Data Repair</h3>", unsafe_allow_html=True)
 st.divider()
 
@@ -71,11 +71,11 @@ with st.sidebar:
 
     st.divider()
     st.markdown("---")
-    st.caption("v0.9.0 Prototype | Powered by Kinsakin Engine")
+    st.caption("v0.9.0 Prototype | Powered by KinSakin Engine")
 
 # --- MAIN LOGIC ---
 if not engine_status:
-    st.warning("⚠️ The Kinsakin Backend is not running. Please start the server terminal.")
+    st.warning("⚠️ The KinSakin Backend is not running. Please start the server terminal.")
     st.stop()
 
 uploaded_file = st.file_uploader("Drop your messy file here (CSV)", type=["csv"])
@@ -92,7 +92,7 @@ if uploaded_file:
 
     # 2. THE REPAIR BUTTON
     st.markdown("---")
-    if st.button("✨ REPAIR DATA (Kinsakin PROCESS)"):
+    if st.button("✨ REPAIR DATA (KinSakin PROCESS)"):
         with st.spinner("Analyzing structure... Detecting entities... Applying Gold Lacquer..."):
             
             uploaded_file.seek(0)
@@ -134,7 +134,7 @@ if uploaded_file:
                         st.download_button(
                             label="📥 Download Polished CSV",
                             data=csv,
-                            file_name=f"Kinsakin_fixed_{uploaded_file.name}",
+                            file_name=f"KinSakin_fixed_{uploaded_file.name}",
                             mime="text/csv",
                         )
                         
