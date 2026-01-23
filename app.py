@@ -89,7 +89,54 @@ if uploaded_file:
         st.caption(f"Detected {raw_df.shape[0]} rows and {raw_df.shape[1]} columns.")
     except:
         st.error("Could not preview raw file. It's really messy!")
+    # ... (keep your existing file upload code) ...
 
+    # ... (keep your existing file upload code) ...
+
+        if uploaded_file is not None:
+            # Load Data
+            try:
+                if uploaded_file.name.endswith('.csv'):
+                    df = pd.read_csv(uploaded_file)
+                else:
+                    df = pd.read_excel(uploaded_file)
+                
+                # 1. The "Gold" (Clean Data)
+                st.subheader("1. The Gold (Clean Data)")
+                st.dataframe(df)
+
+                # 2. The "Intel" (AI Summary)
+                st.subheader("2. The Intelligence Report")
+                
+                # Create 3 Columns for KPIs
+                col1, col2, col3 = st.columns(3)
+                col1.metric("Total Rows", df.shape[0])
+                col1.metric("Total Columns", df.shape[1])
+                
+                # Check for Missing Values (The "Dust")
+                missing_values = df.isnull().sum().sum()
+                col2.metric("Missing Values (Dust)", missing_values)
+                
+                # Identify Numeric Columns for Analysis
+                numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
+                col3.metric("Numeric Fields", len(numeric_cols))
+
+                # 3. The "Vision" (Auto-Visuals)
+                if len(numeric_cols) > 0:
+                    st.subheader("3. Visual Insights")
+                    # Let user pick what to graph
+                    target_col = st.selectbox("Select a column to visualize:", numeric_cols)
+                    
+                    # Create a Line Chart
+                    st.line_chart(df[target_col])
+                    
+                    # Create a Bar Chart
+                    st.bar_chart(df[target_col])
+                else:
+                    st.info("No numeric data detected for visualization.")
+
+            except Exception as e:
+                st.error(f"Error processing file: {e}")    
     # 2. THE REPAIR BUTTON
     st.markdown("---")
     if st.button("✨ REPAIR DATA (KinSakin PROCESS)"):
