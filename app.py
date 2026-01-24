@@ -4,7 +4,7 @@ import io
 import requests
 
 # --- 1. CONFIGURATION (MUST BE FIRST) ---
-API_URL = "http://127.0.0.1:9000"
+API_URL = "http://127.0.0.1:8011"
 st.set_page_config(
     page_title="KinSakin Refinery",
     page_icon="💎",
