@@ -72,6 +72,8 @@ if uploaded_file is not None:
             df = pd.read_excel(uploaded_file)
 
         st.sidebar.success(f"File Loaded: {uploaded_file.name}")
+    except() :
+    
         
         # B. TUNING SHOP (Sidebar)
         st.sidebar.markdown("---")
@@ -119,4 +121,5 @@ if uploaded_file is not None:
                     for col in numeric_cols:
                         if fill_num_strat == "Fill with Average":
                             clean_df[col] = clean_df[col].fillna(clean_df[col].mean())
-                        elif fill_num_strat
+                        elif fill_num_strat:
+                            clean_df[col] = clean_df[col].fillna(0)
