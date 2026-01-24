@@ -1,29 +1,16 @@
 import streamlit as st
 import pandas as pd
-import io
+import google.generativeai as genai
 import time
 
 # --- 1. CONFIGURATION ---
-st.set_page_config(
-    page_title="KinSakin Refinery",
-    page_icon="🧬",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="KinSakin Refinery", page_icon="🧬", layout="wide")
 
-# --- 2. CSS STYLING (Clean Corporate) ---
+# --- 2. CSS STYLING ---
 st.markdown("""
     <style>
-    /* Main Background */
     .stApp { background-color: #FFFFFF; color: #000000; }
-    
-    /* Header Styling */
     h1, h2, h3 { color: #333333 !important; font-family: 'Helvetica', sans-serif; }
-    
-    /* STATUS INDICATORS (Sidebar) */
-    div[data-testid="stMetricValue"] { font-size: 18px; }
-    
-    /* THE LAUNCH BUTTON (Big & Blue) */
     .stButton>button {
         width: 100%;
         background-color: #0066CC;
@@ -33,155 +20,131 @@ st.markdown("""
         padding: 15px;
         border-radius: 8px;
         border: none;
-        box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
         transition: all 0.3s;
     }
-    .stButton>button:hover {
-        background-color: #004C99;
-        transform: scale(1.02);
-    }
+    .stButton>button:hover { background-color: #004C99; transform: scale(1.02); }
+    [data-testid="stFileUploader"] { border: 2px dashed #0066CC; background-color: #F0F8FF; padding: 20px; }
     
-    /* File Uploader Visibility */
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #0066CC;
-        background-color: #F0F8FF; /* Light Blue Tint */
-        padding: 20px;
-    }
+    /* Chat Styling */
+    .stChatMessage { background-color: #F7F7F7; border-radius: 10px; padding: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (The Cockpit) ---
+# --- 3. SIDEBAR (API KEY INPUT) ---
 with st.sidebar:
     st.title("⚙️ SYSTEM STATUS")
-    
-    # STATUS LIGHTS
     col_s1, col_s2 = st.columns(2)
     col_s1.metric("Server", "Online", delta="🟢 Ready")
-    col_s2.metric("Engine", "Active", delta="⚡ V14")
+    col_s2.metric("Engine", "Hybrid V15", delta="⚡ AI+Python")
     
     st.markdown("---")
+    st.header("🔑 AI Access Key")
+    # We ask for the key here so it's secure
+    api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Get free at aistudio.google.com")
     
-    # --- NEW: AI MODEL SELECTION ---
-    st.header("🧠 AI Intelligence")
-    
-    ai_model = st.radio(
-        "Select Your Analyst:",
-        (
-            "Gemini 1.5 Flash (⭐ Best Accuracy)", 
-            "Llama 3 [Groq] (⚡ Fastest Speed)", 
-            "Mistral / HF (🛡️ Open Source)"
-        )
-    )
-    
-    # Dynamic Recommendation Text
-    if "Gemini" in ai_model:
-        st.info("💡 **Why:** Best for complex reasoning and reading large datasets.")
-    elif "Llama" in ai_model:
-        st.success("💡 **Why:** Incredible speed. Best for quick insights.")
+    if api_key:
+        genai.configure(api_key=api_key)
+        st.success("✅ AI Connected")
     else:
-        st.warning("💡 **Why:** Privacy-focused open source model.")
+        st.warning("⚠️ AI Disconnected")
 
     st.markdown("---")
-    
-    # CLEANING SETTINGS
     st.header("🔧 Cleaning Protocols")
     drop_dupes = st.checkbox("Remove Duplicates", value=True)
-    
-    fill_strat = st.selectbox(
-        "Empty Number Strategy", 
-        ["Fill with Average", "Fill with 0", "Drop Rows", "Do Nothing"]
-    )
-    
-    clean_text = st.checkbox("Standardize Text (Title Case)", value=False)
-    
-    st.markdown("---")
-    st.caption("KinSakin Data Refinery © 2026")
+    fill_strat = st.selectbox("Empty Number Strategy", ["Fill with Average", "Fill with 0", "Drop Rows"])
 
-# --- 4. MAIN SCREEN (The Workspace) ---
+# --- 4. MAIN WORKSPACE ---
 st.title("KinSakin Data Refinery")
-st.markdown("### Upload Raw Data to Begin Purification")
-
-# THE MAIN UPLOADER
-uploaded_file = st.file_uploader("", type=['csv', 'xlsx'], help="Drag and drop your messy CSV or Excel file here.")
+st.markdown("### 1. Upload Raw Data")
+uploaded_file = st.file_uploader("", type=['csv', 'xlsx'])
 
 # --- 5. ENGINE LOGIC ---
 if uploaded_file is not None:
-    try:
-        # A. LOAD DATA
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = pd.read_excel(uploaded_file)
+    # LOAD DATA
+    if uploaded_file.name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+    else:
+        df = pd.read_excel(uploaded_file)
 
-        # B. SHOW RAW STATS
-        st.success(f"📂 File Loaded: {uploaded_file.name}")
-        
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Rows", df.shape[0])
-        c2.metric("Columns", df.shape[1])
-        c3.metric("Missing Values", df.isnull().sum().sum())
-        c4.metric("Duplicates", df.duplicated().sum())
+    st.success(f"📂 Loaded: {uploaded_file.name}")
+    
+    # RAW STATS
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Rows", df.shape[0])
+    c2.metric("Columns", df.shape[1])
+    c3.metric("Missing", df.isnull().sum().sum())
+    c4.metric("Duplicates", df.duplicated().sum())
 
-        with st.expander("🔍 Preview Raw Data"):
-            st.dataframe(df.head(10), use_container_width=True)
-
-        st.markdown("---")
-
-        # C. THE LAUNCH BUTTON
-        if st.button("🚀 LAUNCH REFINERY (Clean & Analyze)"):
+    # --- SECTION A: THE ACTION (CLEANING) ---
+    st.markdown("### 2. Action Zone")
+    if st.button("🚀 LAUNCH REFINERY (Clean Data Now)"):
+        with st.spinner("Refining..."):
+            time.sleep(1)
+            clean_df = df.copy()
             
-            with st.spinner(f"Connecting to {ai_model.split('(')[0]}... Processing Data..."):
-                time.sleep(1.5) # Simulate AI thinking time
+            # Cleaning Logic
+            if drop_dupes: clean_df = clean_df.drop_duplicates()
+            num_cols = clean_df.select_dtypes(include=['number']).columns
+            if fill_strat == "Fill with Average":
+                clean_df[num_cols] = clean_df[num_cols].fillna(clean_df[num_cols].mean())
+            elif fill_strat == "Fill with 0":
+                clean_df = clean_df.fillna(0)
+            
+            st.success("✨ Data Purified!")
+            st.dataframe(clean_df.head())
+            
+            # Download
+            csv = clean_df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Download Clean CSV", csv, "clean_data.csv", "text/csv")
+
+    st.markdown("---")
+
+    # --- SECTION B: THE INSIGHT (CHAT WITH VECTORS) ---
+    st.markdown("### 3. Ask the Analyst (AI Chat)")
+    
+    if api_key:
+        # Initialize Chat History
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        # Display Chat History
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        # Chat Input
+        if prompt := st.chat_input("Ask a question about your data (e.g., 'What is the trend?')"):
+            # 1. Show User Message
+            st.chat_message("user").markdown(prompt)
+            st.session_state.messages.append({"role": "user", "content": prompt})
+
+            # 2. Prepare Data Context (The Vector Input)
+            # We send a summary of the data, not the whole thing (to save tokens)
+            data_summary = df.head(10).to_string()
+            stats_summary = df.describe().to_string()
+            
+            ai_prompt = f"""
+            Act as a Senior Data Analyst. Here is a sample of the dataset:
+            {data_summary}
+            
+            Here are the statistics:
+            {stats_summary}
+            
+            User Question: {prompt}
+            
+            Answer concisely and professionally.
+            """
+
+            # 3. Get AI Response
+            try:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(ai_prompt)
                 
-                # --- PROCESSING CORE ---
-                clean_df = df.copy()
-                numeric_cols = clean_df.select_dtypes(include=['number']).columns
-                text_cols = clean_df.select_dtypes(include=['object']).columns
-
-                # 1. Duplicates
-                if drop_dupes:
-                    clean_df = clean_df.drop_duplicates()
-
-                # 2. Numeric Strategy
-                if len(numeric_cols) > 0:
-                    for col in numeric_cols:
-                        if fill_strat == "Fill with Average":
-                            clean_df[col] = clean_df[col].fillna(clean_df[col].mean())
-                        elif fill_strat == "Fill with 0":
-                            clean_df[col] = clean_df[col].fillna(0)
+                with st.chat_message("assistant"):
+                    st.markdown(response.text)
                 
-                if fill_strat == "Drop Rows":
-                    clean_df = clean_df.dropna()
-
-                # 3. Text Strategy
-                if len(text_cols) > 0:
-                    clean_df[text_cols] = clean_df[text_cols].fillna("Unknown")
-                    if clean_text:
-                        for col in text_cols:
-                            clean_df[col] = clean_df[col].astype(str).str.title().str.strip()
-
-                # --- RESULTS ---
-                st.success(f"✨ Data Purified using {ai_model.split('(')[0]}")
-                
-                # Comparison
-                col_final1, col_final2 = st.columns(2)
-                col_final1.metric("Original Dirt", df.isnull().sum().sum())
-                col_final2.metric("Final Dirt", clean_df.isnull().sum().sum())
-                
-                st.dataframe(clean_df.head(20), use_container_width=True)
-                
-                # --- DOWNLOAD ---
-                csv = clean_df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Download Clean Data (CSV)",
-                    data=csv,
-                    file_name=f"Cleaned_{uploaded_file.name}",
-                    mime="text/csv"
-                )
-
-    except Exception as e:
-        st.error(f"Error reading file: {e}")
-
-else:
-    # Empty State
-    st.info("👆 Upload a file to see the AI options.")
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                st.error(f"AI Error: {e}")
+    else:
+        st.info("🔒 Enter your API Key in the Sidebar to unlock the Chat feature.")
