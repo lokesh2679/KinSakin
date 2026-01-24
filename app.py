@@ -131,7 +131,7 @@ if uploaded_file is not None:
 
             # 3. Get AI Response
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                model = genai.GenerativeModel('gemini-2.0-flash')
                 response = model.generate_content(ai_prompt)
                 
                 with st.chat_message("assistant"):
