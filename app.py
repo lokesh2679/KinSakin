@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 import io
+import requests
 
 # --- 1. CONFIGURATION (MUST BE FIRST) ---
+API_URL = "http://127.0.0.1:9000"
 st.set_page_config(
     page_title="KinSakin Refinery",
     page_icon="💎",
@@ -13,7 +15,7 @@ st.set_page_config(
 # --- 2. CUSTOM CSS (ROYAL THEME) ---
 st.markdown("""
     <style>
-    /* Main Background - Void Black */
+    /* Main Background - white */
     .stApp { background-color: #0e1117; color: #E0E0E0; }
     
     /* Headers - Champagne Gold */
@@ -49,6 +51,22 @@ st.markdown("""
 st.title("KINSAKIN")
 st.markdown("<p style='color: #888; margin-top: -20px; font-style: italic;'>The Sovereign Data Refinery</p>", unsafe_allow_html=True)
 st.markdown("---")
+with st.sidebar:
+    st.header("System Status")
+    try:
+        # Quick ping to see if server is up
+        response = requests.get(f"{API_URL}/docs", timeout=2)
+        if response.status_code == 200:
+            st.success("🟢 Engine Online (Port 8011)")
+            engine_status = True
+        else:
+            st.error("🔴 Engine Offline")
+            engine_status = False
+    except:
+        st.error("🔴 Engine Offline")
+        st.warning("Run: `python server.py`")
+        engine_status = False
+
 
 # --- 4. ENGINE LOGIC ---
 try:
