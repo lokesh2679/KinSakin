@@ -35,11 +35,10 @@ with st.sidebar:
     st.title("⚙️ SYSTEM STATUS")
     col_s1, col_s2 = st.columns(2)
     col_s1.metric("Server", "Online", delta="🟢 Ready")
-    col_s2.metric("Engine", "Hybrid V15", delta="⚡ AI+Python")
+    col_s2.metric("Engine", "V16 Freedom", delta="⚡ Unlocked")
     
     st.markdown("---")
     st.header("🔑 AI Access Key")
-    # We ask for the key here so it's secure
     api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Get free at aistudio.google.com")
     
     if api_key:
@@ -100,39 +99,34 @@ if uploaded_file is not None:
     st.markdown("---")
 
     # --- SECTION B: THE INSIGHT (CHAT WITH VECTORS) ---
-    st.markdown("### 3. Ask the Analyst (AI Chat)")
+    st.markdown("### 3. Ask the Intelligence (AI Chat)")
     
     if api_key:
-        # Initialize Chat History
         if "messages" not in st.session_state:
             st.session_state.messages = []
 
-        # Display Chat History
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # Chat Input
-        if prompt := st.chat_input("Ask a question about your data (e.g., 'What is the trend?')"):
+        # FREEDOM PROMPT
+        if prompt := st.chat_input("Type anything (e.g., 'Act as a Poet and rhyme this data')"):
+            
             # 1. Show User Message
             st.chat_message("user").markdown(prompt)
             st.session_state.messages.append({"role": "user", "content": prompt})
 
-            # 2. Prepare Data Context (The Vector Input)
-            # We send a summary of the data, not the whole thing (to save tokens)
+            # 2. CONTEXT INJECTION (The Invisible Helper)
+            # We ONLY attach the data. We DO NOT tell the AI who to be.
             data_summary = df.head(10).to_string()
-            stats_summary = df.describe().to_string()
             
             ai_prompt = f"""
-            Act as a Senior Data Analyst. Here is a sample of the dataset:
+            Here is the data context you need to answer the user's request:
+            DATA SAMPLE:
             {data_summary}
             
-            Here are the statistics:
-            {stats_summary}
-            
-            User Question: {prompt}
-            
-            Answer concisely and professionally.
+            USER REQUEST:
+            {prompt}
             """
 
             # 3. Get AI Response
@@ -147,4 +141,4 @@ if uploaded_file is not None:
             except Exception as e:
                 st.error(f"AI Error: {e}")
     else:
-        st.info("🔒 Enter your API Key in the Sidebar to unlock the Chat feature.")
+        st.info("🔒 Enter API Key in Sidebar to Chat.")
