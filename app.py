@@ -4,60 +4,113 @@ import google.generativeai as genai
 import time
 
 # --- 1. CONFIGURATION ---
-st.set_page_config(page_title="KinSakin Refinery", page_icon="🧬", layout="wide")
+st.set_page_config(page_title="KinSakin Refinery", page_icon="💎", layout="wide")
 
 # --- 2. CSS STYLING ---
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF; color: #000000; }
     h1, h2, h3 { color: #333333 !important; font-family: 'Helvetica', sans-serif; }
+    
+    /* Main Action Button */
     .stButton>button {
         width: 100%;
         background-color: #0066CC;
         color: white;
-        font-size: 20px;
+        font-size: 18px;
         font-weight: bold;
-        padding: 15px;
+        padding: 12px;
         border-radius: 8px;
         border: none;
         transition: all 0.3s;
     }
     .stButton>button:hover { background-color: #004C99; transform: scale(1.02); }
-    [data-testid="stFileUploader"] { border: 2px dashed #0066CC; background-color: #F0F8FF; padding: 20px; }
     
-    /* Chat Styling */
+    /* Connect Button Specifics (Sidebar) */
+    div[data-testid="stSidebar"] .stButton>button {
+        background-color: #28a745; /* Green for Connect */
+    }
+    
+    [data-testid="stFileUploader"] { border: 2px dashed #0066CC; background-color: #F0F8FF; padding: 20px; }
     .stChatMessage { background-color: #F7F7F7; border-radius: 10px; padding: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SIDEBAR (API KEY INPUT) ---
+# --- 3. SESSION STATE SETUP ---
+if "api_key" not in st.session_state:
+    st.session_state.api_key = None
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# --- 4. SIDEBAR (CONTROLS) ---
 with st.sidebar:
     st.title("⚙️ SYSTEM STATUS")
     col_s1, col_s2 = st.columns(2)
     col_s1.metric("Server", "Online", delta="🟢 Ready")
-    col_s2.metric("Engine", "V16 Freedom", delta="⚡ Unlocked")
+    col_s2.metric("Engine", "V17 Final", delta="⚡ Active")
     
     st.markdown("---")
-    st.header("🔑 AI Access Key")
-    api_key = st.text_input("Enter Google Gemini API Key", type="password", help="Get free at aistudio.google.com")
     
-    if api_key:
-        genai.configure(api_key=api_key)
-        st.success("✅ AI Connected")
+    # --- A. API KEY SECTION (With Button) ---
+    st.header("🔑 AI Access")
+    
+    # Input box
+    user_key_input = st.text_input("Enter Google Gemini Key", type="password", help="Get free at aistudio.google.com")
+    
+    # The "Enter" Button
+    if st.button("🔌 Connect Key"):
+        if user_key_input:
+            st.session_state.api_key = user_key_input
+            st.success("✅ Key Connected!")
+            time.sleep(1) # Brief pause for effect
+            st.rerun() # Refresh to lock it in
+        else:
+            st.error("⚠️ Please enter a key first.")
+
+    # Show connection status
+    if st.session_state.api_key:
+        st.caption("Status: Connected to Google Cloud")
+        genai.configure(api_key=st.session_state.api_key)
     else:
-        st.warning("⚠️ AI Disconnected")
+        st.caption("Status: Disconnected")
 
     st.markdown("---")
+    
+    # --- B. MODEL SELECTOR (User Choice) ---
+    st.header("🧠 AI Model")
+    
+    model_choice = st.selectbox(
+        "Select Intelligence Level:",
+        [
+            "Gemini 1.5 Flash (⭐ Best/Stable)", 
+            "Gemini 2.0 Flash Exp (⚡ Newest/Fast)", 
+            "Gemini 1.5 Pro (🎓 High IQ)"
+        ]
+    )
+    
+    # Map the friendly names to the actual API ID
+    model_map = {
+        "Gemini 1.5 Flash (⭐ Best/Stable)": "gemini-1.5-flash",
+        "Gemini 2.0 Flash Exp (⚡ Newest/Fast)": "gemini-2.0-flash-exp",
+        "Gemini 1.5 Pro (🎓 High IQ)": "gemini-1.5-pro"
+    }
+    
+    selected_model_id = model_map[model_choice]
+    st.info(f"Engine Loaded: {model_choice.split('(')[0]}")
+
+    st.markdown("---")
+    
+    # --- C. CLEANING TOOLS ---
     st.header("🔧 Cleaning Protocols")
     drop_dupes = st.checkbox("Remove Duplicates", value=True)
     fill_strat = st.selectbox("Empty Number Strategy", ["Fill with Average", "Fill with 0", "Drop Rows"])
 
-# --- 4. MAIN WORKSPACE ---
+# --- 5. MAIN WORKSPACE ---
 st.title("KinSakin Data Refinery")
 st.markdown("### 1. Upload Raw Data")
 uploaded_file = st.file_uploader("", type=['csv', 'xlsx'])
 
-# --- 5. ENGINE LOGIC ---
+# --- 6. ENGINE LOGIC ---
 if uploaded_file is not None:
     # LOAD DATA
     if uploaded_file.name.endswith('.csv'):
@@ -74,7 +127,7 @@ if uploaded_file is not None:
     c3.metric("Missing", df.isnull().sum().sum())
     c4.metric("Duplicates", df.duplicated().sum())
 
-    # --- SECTION A: THE ACTION (CLEANING) ---
+    # --- SECTION A: CLEANING ---
     st.markdown("### 2. Action Zone")
     if st.button("🚀 LAUNCH REFINERY (Clean Data Now)"):
         with st.spinner("Refining..."):
@@ -98,48 +151,54 @@ if uploaded_file is not None:
 
     st.markdown("---")
 
-    # --- SECTION B: THE INSIGHT (CHAT WITH VECTORS) ---
+    # --- SECTION B: AI CHAT ---
     st.markdown("### 3. Ask the Intelligence (AI Chat)")
     
-    if api_key:
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
+    if st.session_state.api_key:
+        # Display Chat History
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
 
-        # FREEDOM PROMPT
-        if prompt := st.chat_input("Type anything (e.g., 'Act as a Poet and rhyme this data')"):
-            
-            # 1. Show User Message
+        # Chat Input
+        if prompt := st.chat_input("Ask your data anything..."):
+            # 1. User Message
             st.chat_message("user").markdown(prompt)
             st.session_state.messages.append({"role": "user", "content": prompt})
 
-            # 2. CONTEXT INJECTION (The Invisible Helper)
-            # We ONLY attach the data. We DO NOT tell the AI who to be.
+            # 2. Context Logic
             data_summary = df.head(10).to_string()
-            
             ai_prompt = f"""
-            Here is the data context you need to answer the user's request:
-            DATA SAMPLE:
+            DATA CONTEXT:
             {data_summary}
             
-            USER REQUEST:
+            USER QUESTION:
             {prompt}
+            
+            Respond concisely.
             """
 
-            # 3. Get AI Response
+            # 3. AI Generation
             try:
-                # USE THIS MODEL NAME - IT IS THE SAFE "FREE TIER" ROUTE
-                model = genai.GenerativeModel('gemini-flash-latest') 
-                
+                # Use the user's selected model!
+                model = genai.GenerativeModel(selected_model_id)
                 response = model.generate_content(ai_prompt)
                 
                 with st.chat_message("assistant"):
                     st.markdown(response.text)
                 
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
+            
             except Exception as e:
-                st.error(f"AI Connection Error: {e}")
-        st.info("🔒 Enter API Key in Sidebar to Chat.")
+                # Auto-fallback logic if their key doesn't support the fancy model
+                st.warning(f"Note: {selected_model_id} failed. Retrying with standard model...")
+                try:
+                    fallback_model = genai.GenerativeModel("gemini-1.5-flash")
+                    response = fallback_model.generate_content(ai_prompt)
+                    with st.chat_message("assistant"):
+                        st.markdown(response.text)
+                    st.session_state.messages.append({"role": "assistant", "content": response.text})
+                except:
+                    st.error(f"Error: {e}. Please check your API Key.")
+    else:
+        st.info("🔒 Connect your API Key in the Sidebar (Top Left) to unlock Chat.")
