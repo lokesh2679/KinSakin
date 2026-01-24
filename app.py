@@ -179,26 +179,18 @@ if uploaded_file is not None:
             """
 
             # 3. AI Generation
+            # 3. Get AI Response
             try:
-                # Use the user's selected model!
-                model = genai.GenerativeModel(selected_model_id)
+                # USE THIS MODEL NAME - IT IS THE SAFE "FREE TIER" ROUTE
+                model = genai.GenerativeModel('gemini-flash-latest') 
+                
                 response = model.generate_content(ai_prompt)
                 
                 with st.chat_message("assistant"):
                     st.markdown(response.text)
                 
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
-            
             except Exception as e:
-                # Auto-fallback logic if their key doesn't support the fancy model
-                st.warning(f"Note: {selected_model_id} failed. Retrying with standard model...")
-                try:
-                    fallback_model = genai.GenerativeModel("gemini-1.5-flash")
-                    response = fallback_model.generate_content(ai_prompt)
-                    with st.chat_message("assistant"):
-                        st.markdown(response.text)
-                    st.session_state.messages.append({"role": "assistant", "content": response.text})
-                except:
-                    st.error(f"Error: {e}. Please check your API Key.")
+                st.error(f"AI Connection Error: {e}")
     else:
         st.info("🔒 Connect your API Key in the Sidebar (Top Left) to unlock Chat.")
