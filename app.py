@@ -131,7 +131,9 @@ if uploaded_file is not None:
 
             # 3. Get AI Response
             try:
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                # USE THIS MODEL NAME - IT IS THE SAFE "FREE TIER" ROUTE
+                model = genai.GenerativeModel('gemini-flash-latest') 
+                
                 response = model.generate_content(ai_prompt)
                 
                 with st.chat_message("assistant"):
@@ -139,6 +141,5 @@ if uploaded_file is not None:
                 
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                st.error(f"AI Error: {e}")
-    else:
+                st.error(f"AI Connection Error: {e}")
         st.info("🔒 Enter API Key in Sidebar to Chat.")
