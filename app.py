@@ -16,7 +16,8 @@ st.set_page_config(
 st.markdown("""
     <style>
     /* Main Background - white */
-    .stApp { background-color: #0e1117; color: #E0E0E0; }
+    .stApp { background-color: #0e1117;
+color: #E0E0E0; }
     
     /* Headers - Champagne Gold */
     h1, h2, h3 { color: #C5A059 !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 300; }
