@@ -5,7 +5,7 @@ import time
 import io
 
 # --- 1. CONFIGURATION ---
-st.set_page_config(page_title="KinSakin Refinery", page_icon="💎", layout="wide")
+st.set_page_config(page_title="KinSakin Refinery", layout="wide")
 
 # --- 2. CSS STYLING ---
 st.markdown("""
@@ -176,3 +176,4 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Error: {e}")
+
