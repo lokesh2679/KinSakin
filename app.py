@@ -51,7 +51,7 @@ with st.sidebar:
    
     st.markdown("---")
     st.caption("🚀 KinSakin Beta V0.1")
-    st.markdown("[🐛 Report a Bug / Feedback](mailto:your-email@example.com)")
+    st.markdown("[🐛 Report a Bug / Feedback](mailto:i.lokesh.s.kumar@gmail.com)")
     
     # API Key
     st.header("🔑 AI Access")
@@ -194,3 +194,4 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Error: {e}")
+
