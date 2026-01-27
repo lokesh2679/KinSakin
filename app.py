@@ -4,7 +4,7 @@ import google.generativeai as genai
 import time
 
 # --- 1. CONFIGURATION ---
-st.set_page_config(page_title="KinSakin Refinery", page_icon="💎", layout="wide")
+st.set_page_config(page_title="KinSakin Refinery", layout="wide")
 
 # --- 2. CSS STYLING ---
 st.markdown("""
@@ -194,3 +194,4 @@ if uploaded_file is not None:
                 st.error(f"AI Connection Error: {e}")
     else:
         st.info("🔒 Connect your API Key in the Sidebar (Top Left) to unlock Chat.")
+
