@@ -48,6 +48,10 @@ with st.sidebar:
     col_s2.metric("Engine", "V19 Auto-Flush", delta="⚡ Secure")
     
     st.markdown("---")
+   
+    st.markdown("---")
+    st.caption("🚀 KinSakin Beta V0.1")
+    st.markdown("[🐛 Report a Bug / Feedback](mailto:your-email@example.com)")
     
     # API Key
     st.header("🔑 AI Access")
