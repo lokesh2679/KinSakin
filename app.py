@@ -30,10 +30,11 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 3. SESSION STATE SETUP (The Memory Vault) ---
-# This ensures data doesn't vanish when you click other buttons
+# --- 3. SESSION STATE SETUP ---
 if "clean_df" not in st.session_state:
     st.session_state.clean_df = None
+if "last_file_id" not in st.session_state:
+    st.session_state.last_file_id = None
 if "api_key" not in st.session_state:
     st.session_state.api_key = None
 if "messages" not in st.session_state:
@@ -44,11 +45,11 @@ with st.sidebar:
     st.title("⚙️ SYSTEM STATUS")
     col_s1, col_s2 = st.columns(2)
     col_s1.metric("Server", "Online", delta="🟢 Ready")
-    col_s2.metric("Engine", "V18 Stable", delta="⚡ Persistent")
+    col_s2.metric("Engine", "V19 Auto-Flush", delta="⚡ Secure")
     
     st.markdown("---")
     
-    # API Key Section
+    # API Key
     st.header("🔑 AI Access")
     user_key_input = st.text_input("Enter Google Gemini Key", type="password")
     if st.button("🔌 Connect Key"):
@@ -63,27 +64,19 @@ with st.sidebar:
     model_choice = st.selectbox("Select Intelligence:", 
                                 ["Gemini 1.5 Flash (⭐ Best)", "Gemini 2.0 Flash Exp (⚡ Fast)", "Gemini 1.5 Pro (🎓 Smart)"])
     
-    model_map = {
-        "Gemini 1.5 Flash (⭐ Best)": "gemini-1.5-flash",
-        "Gemini 2.0 Flash Exp (⚡ Fast)": "gemini-2.0-flash-exp",
-        "Gemini 1.5 Pro (🎓 Smart)": "gemini-1.5-pro"
-    }
-    selected_model_id = model_map[model_choice]
-
-    st.markdown("---")
-    
     # Cleaning Protocols
     st.header("🔧 Cleaning Protocols")
     drop_dupes = st.checkbox("Remove Duplicates", value=True)
     fill_strat = st.selectbox("Empty Number Strategy", ["Fill with Average", "Fill with 0", "Drop Rows"])
     
-    # Reset Button
+    # Manual Reset
     if st.button("🔄 Reset All"):
         st.session_state.clean_df = None
+        st.session_state.last_file_id = None
         st.session_state.messages = []
         st.rerun()
 
-# --- 5. OPTIMIZED DATA LOADER (Cache) ---
+# --- 5. OPTIMIZED DATA LOADER ---
 @st.cache_data(ttl=3600)
 def load_data(file):
     if file.name.endswith('.csv'):
@@ -96,8 +89,15 @@ st.title("KinSakin Data Refinery")
 uploaded_file = st.file_uploader("Upload Raw Data (CSV/Excel)", type=['csv', 'xlsx'])
 
 if uploaded_file is not None:
+    # --- AUTO-FLUSH LOGIC (The Fix) ---
+    # Detect if this is a NEW file. If yes, clear old memory.
+    file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+    if st.session_state.last_file_id != file_id:
+        st.session_state.clean_df = None  # WIPE OLD DATA
+        st.session_state.last_file_id = file_id # Update ID
+        st.toast("New file detected. Workspace cleared.", icon="🧹")
+
     try:
-        # Load Data
         df = load_data(uploaded_file)
         
         # Raw Stats
@@ -106,35 +106,41 @@ if uploaded_file is not None:
         # --- SECTION A: CLEANING ---
         st.markdown("### 2. Action Zone")
         
-        # The Button Logic
-        if st.button("🚀 LAUNCH REFINERY (Clean Data Now)"):
-            with st.spinner("Refining... This may take a moment for large files..."):
-                # Perform Cleaning
-                temp_df = df.copy()
-                if drop_dupes: temp_df = temp_df.drop_duplicates()
-                num_cols = temp_df.select_dtypes(include=['number']).columns
-                if fill_strat == "Fill with Average":
-                    temp_df[num_cols] = temp_df[num_cols].fillna(temp_df[num_cols].mean())
-                elif fill_strat == "Fill with 0":
-                    temp_df = temp_df.fillna(0)
-                
-                # SAVE TO SESSION STATE (This fixes the disappearing act)
-                st.session_state.clean_df = temp_df
-                st.success("✨ Data Purified Successfully!")
+        # Only show the button if we haven't cleaned this specific file yet
+        if st.session_state.clean_df is None:
+            if st.button("🚀 LAUNCH REFINERY (Clean Data Now)"):
+                with st.spinner("Refining... Please wait..."):
+                    temp_df = df.copy()
+                    
+                    # Cleaning Steps
+                    if drop_dupes: temp_df = temp_df.drop_duplicates()
+                    num_cols = temp_df.select_dtypes(include=['number']).columns
+                    if fill_strat == "Fill with Average":
+                        temp_df[num_cols] = temp_df[num_cols].fillna(temp_df[num_cols].mean())
+                    elif fill_strat == "Fill with 0":
+                        temp_df = temp_df.fillna(0)
+                    
+                    # Save Result
+                    st.session_state.clean_df = temp_df
+                    st.rerun() # Refresh to show results immediately
         
-        # DISPLAY RESULT (If it exists in memory)
+        # --- RESULTS DISPLAY ---
         if st.session_state.clean_df is not None:
             clean_df = st.session_state.clean_df
             
+            # Metrics
             c1, c2 = st.columns(2)
             c1.metric("Original Rows", df.shape[0])
             c2.metric("Cleaned Rows", clean_df.shape[0])
             
-            # THE FIX FOR LARGE FILES: Only show preview, but confirm full size
-            st.warning(f"⚠️ Displaying first 100 rows preview only (to keep browser fast). The download contains all {clean_df.shape[0]} rows.")
+            # Preview (Limited)
+            st.warning(f"⚠️ PREVIEW ONLY: Showing first 100 rows. The download below contains all {clean_df.shape[0]} rows.")
             st.dataframe(clean_df.head(100), use_container_width=True)
             
-            # Download Button
+            # DEBUG CHECK FOR YOU
+            st.write(f"✅ **Ready to Download:** Packaging {clean_df.shape[0]} rows into CSV...")
+            
+            # Download
             csv = clean_df.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="📥 Download FULL Clean Data (CSV)",
@@ -160,11 +166,19 @@ if uploaded_file is not None:
 
                 # Context
                 data_summary = df.head(10).to_string()
-                ai_prompt = f"DATA CONTEXT:\n{data_summary}\n\nUSER QUESTION:\n{prompt}"
+                model_map = {
+                    "Gemini 1.5 Flash (⭐ Best)": "gemini-1.5-flash",
+                    "Gemini 2.0 Flash Exp (⚡ Fast)": "gemini-2.0-flash-exp",
+                    "Gemini 1.5 Pro (🎓 Smart)": "gemini-1.5-pro"
+                }
                 
                 try:
                     if st.session_state.api_key: genai.configure(api_key=st.session_state.api_key)
+                    # Use the correct model ID from the map
+                    selected_model_id = model_map[model_choice] 
                     model = genai.GenerativeModel(selected_model_id)
+                    
+                    ai_prompt = f"DATA CONTEXT:\n{data_summary}\n\nUSER QUESTION:\n{prompt}"
                     response = model.generate_content(ai_prompt)
                     
                     with st.chat_message("assistant"): st.markdown(response.text)
@@ -176,4 +190,3 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Error: {e}")
-
