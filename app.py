@@ -157,7 +157,7 @@ if uploaded_file is not None:
                 clean_df = clean_df.fillna(0)
             
             st.success("✨ Data Purified!")
-            st.dataframe(clean_df)
+            st.dataframe(clean_df.head(100))
             
             # Download
             csv = clean_df.to_csv(index=False).encode('utf-8')
@@ -208,3 +208,4 @@ if uploaded_file is not None:
                 st.error(f"AI Connection Error: {e}")
     else:
         st.info("🔒 Connect your API Key in the Sidebar (Top Left) to unlock Chat.")
+
