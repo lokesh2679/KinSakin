@@ -110,15 +110,29 @@ st.title("KinSakin Data Refinery")
 st.markdown("### 1. Upload Raw Data")
 uploaded_file = st.file_uploader("", type=['csv', 'xlsx'])
 
-# --- 6. ENGINE LOGIC ---
-if uploaded_file is not None:
-    # LOAD DATA
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
-    else:
-        df = pd.read_excel(uploaded_file)
+# --- 6. OPTIMIZED ENGINE LOGIC ---
 
-    st.success(f"📂 Loaded: {uploaded_file.name}")
+# A. THE CACHING FUNCTION (The Speed Boost)
+@st.cache_data(ttl=3600) # Keep in memory for 1 hour
+def load_data(file):
+    if file.name.endswith('.csv'):
+        return pd.read_csv(file)
+    else:
+        # 'engine'='openpyxl' is faster for xlsx
+        return pd.read_excel(file, engine='openpyxl') 
+
+if uploaded_file is not None:
+    # B. USE THE FUNCTION
+    try:
+        # Instead of reading directly, we ask the cache
+        df = load_data(uploaded_file)
+        
+        st.success(f"📂 Loaded: {uploaded_file.name}")
+
+        # ... (Rest of your code: Stats, Cleaning, etc.) ...
+        
+    except Exception as e:
+        st.error(f"Error loading file: {e}")
     
     # RAW STATS
     c1, c2, c3, c4 = st.columns(4)
@@ -194,4 +208,3 @@ if uploaded_file is not None:
                 st.error(f"AI Connection Error: {e}")
     else:
         st.info("🔒 Connect your API Key in the Sidebar (Top Left) to unlock Chat.")
-
