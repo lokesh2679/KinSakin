@@ -171,10 +171,15 @@ if uploaded_file is not None:
                 # Context
                 data_summary = df.head(10).to_string()
                 model_map = {
-                    "Gemini 1.5 Flash (⭐ Best)": "gemini-1.5-flash",
-                    "Gemini 2.0 Flash Exp (⚡ Fast)": "gemini-2.0-flash-exp",
-                    "Gemini 1.5 Pro (🎓 Smart)": "gemini-1.5-pro"
-                }
+        # CHANGE 1: Use 'gemini-flash-latest' instead of 'gemini-1.5-flash'
+        "Gemini 1.5 Flash (⭐ Best)": "gemini-flash-latest", 
+        
+        # CHANGE 2: Keep 2.0 as is (this worked on your list)
+        "Gemini 2.0 Flash Exp (⚡ Fast)": "gemini-2.0-flash-exp", 
+        
+        # CHANGE 3: Use 'gemini-pro-latest' instead of 'gemini-1.5-pro'
+        "Gemini 1.5 Pro (🎓 Smart)": "gemini-pro-latest"
+    }
                 
                 try:
                     if st.session_state.api_key: genai.configure(api_key=st.session_state.api_key)
@@ -194,4 +199,3 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"Error: {e}")
-
